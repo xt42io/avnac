@@ -14,7 +14,6 @@ import {
   useTambo,
   useTamboThreadInput,
 } from '@tambo-ai/react'
-import { usePostHog } from 'posthog-js/react'
 import {
   type ChangeEvent,
   type FormEvent,
@@ -26,6 +25,7 @@ import {
 } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { useAnalytics } from '../lib/analytics'
 import type { AiDesignController } from '../lib/avnac-ai-controller'
 import { buildAvnacTamboTools } from '../lib/avnac-ai-tambo-tools'
 import { pickMagicQuickPrompts } from '../lib/avnac-magic-quick-prompts'
@@ -287,7 +287,7 @@ function MagicChat({ quickPrompts }: { quickPrompts: string[] }) {
   const [error, setError] = useState<string | null>(null)
   const scrollerRef = useRef<HTMLDivElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
-  const posthog = usePostHog()
+  const analytics = useAnalytics()
 
   const displayMessages = useMemo(() => groupMessagesForDisplay(messages), [messages])
 
@@ -302,14 +302,14 @@ function MagicChat({ quickPrompts }: { quickPrompts: string[] }) {
     const hasText = value.trim().length > 0
     if ((!hasText && stagedImages.length === 0) || isPending || isStreaming) return
     setError(null)
-    posthog.capture('ai_prompt_submitted', {
+    analytics.aiPromptSubmitted({
       prompt_length: value.trim().length,
       image_count: stagedImages.length,
     })
     try {
       await submit()
     } catch (err) {
-      posthog.captureException(err)
+      analytics.captureError(err)
       setError(err instanceof Error ? err.message : 'Something went wrong.')
     }
   }

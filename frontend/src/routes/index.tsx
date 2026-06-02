@@ -15,7 +15,6 @@ import {
   useSpring,
   useTransform,
 } from "motion/react";
-import { usePostHog } from "posthog-js/react";
 import {
   type CSSProperties,
   useCallback,
@@ -26,6 +25,7 @@ import {
 } from "react";
 import doodleSvgRaw from "../assets/doodle.svg?raw";
 import NewCanvasDialog from "../components/new-canvas-dialog";
+import { useAnalytics } from "../lib/analytics";
 import { idbListDocuments } from "../lib/avnac-editor-idb";
 
 export const Route = createFileRoute("/")({ component: Landing });
@@ -222,7 +222,7 @@ function Landing() {
   const [stickers, setStickers] = useState(initialStickers);
   const [activeStickerId, setActiveStickerId] = useState<string | null>(null);
   const [activeToolIndex, setActiveToolIndex] = useState(0);
-  const posthog = usePostHog();
+  const analytics = useAnalytics();
   const stickerLayerRef = useRef<HTMLDivElement | null>(null);
   const toolsSectionRef = useRef<HTMLDivElement | null>(null);
   const vectorsSectionRef = useRef<HTMLElement | null>(null);
@@ -353,7 +353,7 @@ function Landing() {
         const docs = await idbListDocuments();
         setSavedFileCount(docs.length);
         const destination = docs.length > 0 ? "/files" : "/create";
-        posthog.capture("editor_opened", {
+        analytics.editorOpened({
           source: "landing_hero",
           destination,
           existing_file_count: docs.length,
@@ -363,11 +363,11 @@ function Landing() {
           return;
         }
       } catch (err) {
-        posthog.captureException(err);
+        analytics.captureError(err);
       }
       setNewCanvasOpen(true);
     })();
-  }, [navigate, posthog]);
+  }, [navigate, analytics]);
 
   const hasSavedFiles = (savedFileCount ?? 0) > 0;
   const primaryCtaLabel = hasSavedFiles ? "Open files" : "Open editor";

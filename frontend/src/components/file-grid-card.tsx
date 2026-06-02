@@ -7,8 +7,8 @@ import {
   Tick02Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { usePostHog } from 'posthog-js/react'
 import { useEffect, useRef, useState } from 'react'
+import { useAnalytics } from '../lib/analytics'
 import { type AvnacEditorIdbListItem, idbDuplicateDocument } from '../lib/avnac-editor-idb'
 import { downloadAvnacJsonForId } from '../lib/avnac-files-export'
 import FileGridPreview from './file-grid-preview'
@@ -34,7 +34,7 @@ export default function FileGridCard({
 }: FileGridCardProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
-  const posthog = usePostHog()
+  const analytics = useAnalytics()
 
   useEffect(() => {
     if (!menuOpen) return
@@ -59,7 +59,7 @@ export default function FileGridCard({
       onRequestOpen(row, 'menu')
       return
     }
-    posthog.capture('file_opened', { file_id: row.id, method: 'new_tab' })
+    analytics.fileOpened({ file_id: row.id, method: 'new_tab' })
     const u = new URL('/create', window.location.origin)
     u.searchParams.set('id', row.id)
     window.open(u.toString(), '_blank', 'noopener,noreferrer')
@@ -71,15 +71,14 @@ export default function FileGridCard({
       try {
         const newId = await idbDuplicateDocument(row.id)
         if (newId) {
-          posthog.capture('file_duplicated', {
+          analytics.fileDuplicated({
             file_id: row.id,
             new_file_id: newId,
           })
           onListChange()
         }
       } catch (err) {
-        posthog.captureException(err)
-        console.error('[avnac] duplicate failed', err)
+        analytics.captureError(err, '[avnac] duplicate failed')
       }
     })()
   }
@@ -89,10 +88,9 @@ export default function FileGridCard({
     void (async () => {
       try {
         await downloadAvnacJsonForId(row.id)
-        posthog.capture('file_downloaded', { file_id: row.id, format: 'json' })
+        analytics.fileDownloaded({ file_id: row.id, format: 'json' })
       } catch (err) {
-        posthog.captureException(err)
-        console.error('[avnac] download failed', err)
+        analytics.captureError(err, '[avnac] download failed')
       }
     })()
   }

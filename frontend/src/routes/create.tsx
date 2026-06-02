@@ -1,13 +1,13 @@
 import { Home05Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { usePostHog } from 'posthog-js/react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import DocumentMigrationDialog from '../components/document-migration-dialog'
 import EditorExportMenu from '../components/editor-export-menu'
 import SceneEditor, { type SceneEditorHandle } from '../components/scene-editor'
 import { buttonClassName, iconButtonClassName, Kicker, Surface, Text } from '../components/ui'
 import { useEditorUnsupportedOnThisDevice } from '../hooks/use-editor-device-support'
+import { useAnalytics } from '../lib/analytics'
 import {
   idbGetEditorRecord,
   idbMigrateLegacyDocument,
@@ -51,7 +51,7 @@ function CreatePage() {
   const initialW = search.w
   const initialH = search.h
   const navigate = Route.useNavigate()
-  const posthog = usePostHog()
+  const analytics = useAnalytics()
   const editorUnsupported = useEditorUnsupportedOnThisDevice()
 
   useLayoutEffect(() => {
@@ -87,7 +87,7 @@ function CreatePage() {
     setDocumentTitle(t)
     if (id) {
       void idbSetDocumentName(id, t)
-      posthog.capture('document_renamed', { file_id: id, new_name: t })
+      analytics.documentRenamed({ file_id: id, new_name: t })
     }
   }
 
@@ -96,14 +96,14 @@ function CreatePage() {
 
   useEffect(() => {
     if (!legacyBlocked || !id) return
-    posthog.capture('legacy_conversion_prompt_opened', {
+    analytics.legacyConversionPromptOpened({
       surface: 'create_page',
       trigger_source: 'direct_open',
       file_count: 1,
       file_ids: [id],
       open_after_conversion: false,
     })
-  }, [id, legacyBlocked, posthog])
+  }, [id, legacyBlocked, analytics])
 
   if (editorUnsupported) {
     return (
@@ -226,7 +226,7 @@ function CreatePage() {
         busy={migrationBusy}
         onClose={() => {
           if (migrationBusy) return
-          posthog.capture('legacy_conversion_cancelled', {
+          analytics.legacyConversionCancelled({
             surface: 'create_page',
             trigger_source: 'direct_open',
             file_count: 1,
@@ -237,7 +237,7 @@ function CreatePage() {
         }}
         onConfirm={() => {
           if (migrationBusy) return
-          posthog.capture('legacy_conversion_started', {
+          analytics.legacyConversionStarted({
             surface: 'create_page',
             trigger_source: 'direct_open',
             file_count: 1,
@@ -248,7 +248,7 @@ function CreatePage() {
           void (async () => {
             try {
               await idbMigrateLegacyDocument(id)
-              posthog.capture('legacy_conversion_completed', {
+              analytics.legacyConversionCompleted({
                 surface: 'create_page',
                 trigger_source: 'direct_open',
                 file_count: 1,
@@ -258,15 +258,14 @@ function CreatePage() {
               })
               setDocumentStorageKind('current')
             } catch (err) {
-              posthog.capture('legacy_conversion_failed', {
+              analytics.legacyConversionFailed({
                 surface: 'create_page',
                 trigger_source: 'direct_open',
                 file_count: 1,
                 file_ids: [id],
                 open_after_conversion: false,
               })
-              posthog.captureException(err)
-              console.error('[avnac] legacy migration failed', err)
+              analytics.captureError(err, '[avnac] legacy migration failed')
             } finally {
               setMigrationBusy(false)
             }
