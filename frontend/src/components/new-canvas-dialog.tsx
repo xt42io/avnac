@@ -1,10 +1,10 @@
 import { StarIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useNavigate } from '@tanstack/react-router'
-import { usePostHog } from 'posthog-js/react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { ARTBOARD_PRESETS, type ArtboardPresetCategory } from '../data/artboard-presets'
 import { useEditorUnsupportedOnThisDevice } from '../hooks/use-editor-device-support'
+import { useAnalytics } from '../lib/analytics'
 
 const CANVAS_MIN = 100
 const CANVAS_MAX = 16000
@@ -96,7 +96,7 @@ type NewCanvasDialogProps = {
 
 export default function NewCanvasDialog({ open, onClose }: NewCanvasDialogProps) {
   const navigate = useNavigate()
-  const posthog = usePostHog()
+  const analytics = useAnalytics()
   const editorUnsupported = useEditorUnsupportedOnThisDevice()
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
@@ -130,7 +130,7 @@ export default function NewCanvasDialog({ open, onClose }: NewCanvasDialogProps)
   const goCreate = (w: number, h: number, presetLabel?: string) => {
     const W = Math.min(CANVAS_MAX, Math.max(CANVAS_MIN, Math.round(w)))
     const H = Math.min(CANVAS_MAX, Math.max(CANVAS_MIN, Math.round(h)))
-    posthog.capture('canvas_created', {
+    analytics.canvasCreated({
       width: W,
       height: H,
       creation_mode: presetLabel ? 'preset' : 'custom',
