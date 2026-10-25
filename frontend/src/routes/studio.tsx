@@ -1,6 +1,9 @@
 import {
+  AiMagicIcon,
   AppleIcon,
   CommandLineIcon,
+  Configuration01Icon,
+  GeometricShapes02Icon,
   GithubIcon,
   WindowsNewIcon,
 } from '@hugeicons/core-free-icons'
@@ -123,6 +126,9 @@ const primaryButtonClass =
 const secondaryButtonClass =
   'inline-flex min-h-12 items-center justify-center rounded-full border border-black/14 bg-white/78 px-8 py-3.5 text-base font-medium text-(--text) no-underline backdrop-blur-sm hover:border-black/22 hover:bg-white sm:min-h-14 sm:px-10 sm:py-4 sm:text-[1.0625rem]'
 
+const copyButtonClass =
+  'inline-flex min-h-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/14 bg-white/78 px-4 text-sm font-medium text-(--text) transition-colors hover:border-black/22 hover:bg-white'
+
 const textLinkClass =
   'font-medium text-(--text) underline decoration-black/15 underline-offset-4 transition-colors hover:text-black'
 
@@ -135,6 +141,27 @@ const releasePageHref = 'https://github.com/striker561/Avnac-Studio/releases/lat
 const studioRepoHref = 'https://github.com/striker561/Avnac-Studio'
 
 const studioBranchHref = 'https://github.com/striker561/Avnac-Studio/tree/studio'
+
+const mcpGuideHref =
+  'https://github.com/striker561/Avnac-Studio/blob/studio/docs/MCP_GUIDE.md'
+
+const skillCommand = 'npx skills add striker561/Avnac-Studio --skill avnac-designer'
+
+const connectConfig = JSON.stringify(
+  {
+    mcpServers: {
+      'avnac-studio': {
+        url: 'http://127.0.0.1:12345/',
+        headers: { Authorization: 'Bearer <token from Avnac Settings>' },
+      },
+    },
+  },
+  null,
+  2,
+)
+
+const claudeConnectCommand =
+  'claude mcp add --transport http avnac-studio http://127.0.0.1:12345/ --header "Authorization: Bearer <token from Avnac Settings>"'
 
 const striker561TwitterHref = 'https://twitter.com/insigdev'
 const d3uceyTwitterHref = 'https://twitter.com/d3uc3y'
@@ -251,6 +278,7 @@ function StudioPage() {
   const stickerLayerRef = useRef<HTMLDivElement | null>(null)
   const dragStateRef = useRef<DragState | null>(null)
   const compact = useCompactLayout()
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
   const updateStickerPosition = useCallback(
     (stickerId: string, clientX: number, clientY: number) => {
@@ -305,6 +333,17 @@ function StudioPage() {
     dragStateRef.current = null
     setActiveStickerId(null)
   }
+
+  const copyText = useCallback((key: string, text: string) => {
+    if (!navigator.clipboard?.writeText) return
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        setCopiedKey(key)
+        window.setTimeout(() => setCopiedKey(null), 2000)
+      })
+      .catch(() => {})
+  }, [])
 
   return (
     <main className="landing-page">
@@ -765,6 +804,155 @@ function StudioPage() {
                 <p>{card.body}</p>
               </article>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="ai-agents" className="landing-section">
+        <div className="landing-container">
+          <div className="landing-ai-shell">
+            <div className="landing-ai-header">
+              <div className={sectionLabelClass}>AI agents</div>
+              <h2 className="display-title landing-section-title">
+                Design with AI agents.
+              </h2>
+              <p className="landing-section-copy">
+                Studio ships a built-in MCP server, so coding agents like Cursor, Claude Code,
+                and Codex can drive the canvas in plain language — composing shapes and text,
+                pulling in photos, and screenshotting their own work to check it.
+              </p>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <article className="landing-ai-card flex h-full min-w-0! flex-col rounded-[1.6rem] border border-black/8 bg-white/80 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] backdrop-blur-md">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex size-10 items-center justify-center rounded-2xl bg-black/5 text-(--text)">
+                    <HugeiconsIcon icon={AiMagicIcon} size={18} strokeWidth={1.75} />
+                  </span>
+                  <div className="landing-kicker">One command</div>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-(--text-muted)">
+                  The avnac-designer skill teaches your agent the canvas, the tools, and the
+                  design workflow before it draws anything.
+                </p>
+                <pre className="mt-6 min-w-0! overflow-x-auto rounded-[1.2rem] bg-[#111111] px-4 py-4 text-sm leading-7 text-white">
+                  <code className="block whitespace-pre-wrap">{skillCommand}</code>
+                </pre>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-xs text-(--text-subtle)">
+                    Requires Node.js 22.20+. Installs into your project.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => copyText('skill', skillCommand)}
+                    className={copyButtonClass}
+                  >
+                    {copiedKey === 'skill' ? 'Copied' : 'Copy command'}
+                  </button>
+                </div>
+              </article>
+
+              <article className="landing-ai-card flex h-full min-w-0! flex-col rounded-[1.6rem] border border-black/8 bg-white/80 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] backdrop-blur-md">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex size-10 items-center justify-center rounded-2xl bg-black/5 text-(--text)">
+                    <HugeiconsIcon icon={GeometricShapes02Icon} size={18} strokeWidth={1.75} />
+                  </span>
+                  <div className="landing-kicker">On the canvas</div>
+                </div>
+                <ul className="mt-4 space-y-2 text-sm leading-6 text-(--text-muted)">
+                  <li>
+                    Create and edit shapes, text, images, and stickers in a single call
+                  </li>
+                  <li>Agents check their own work with canvas screenshots</li>
+                  <li>Unsplash photography, Google Fonts, and built-in stickers</li>
+                  <li>Align, distribute, and fit layouts, then export PNG or SVG</li>
+                </ul>
+                <p className="mt-auto pt-5 text-sm leading-6 text-(--text-muted)">
+                  Full tool reference:{' '}
+                  <a
+                    href={mcpGuideHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={textLinkClass}
+                  >
+                    the MCP guide
+                  </a>
+                  . Get the app from{' '}
+                  <a
+                    href={releasePageHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={textLinkClass}
+                  >
+                    Studio releases
+                  </a>
+                  .
+                </p>
+              </article>
+            </div>
+
+            <article className="landing-ai-card mt-4 min-w-0! rounded-[1.6rem] border border-black/8 bg-white/80 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] backdrop-blur-md">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex size-10 items-center justify-center rounded-2xl bg-black/5 text-(--text)">
+                  <HugeiconsIcon icon={Configuration01Icon} size={18} strokeWidth={1.75} />
+                </span>
+                <div className="landing-kicker">Connect your agent</div>
+              </div>
+              <p className="mt-4 max-w-3xl text-sm leading-6 text-(--text-muted)">
+                The skill teaches the agent how to design — the MCP server is how it reaches the
+                canvas. Turn it on in Avnac Studio → Settings → MCP server, then point your
+                client at the URL and bearer token shown there.
+              </p>
+              <div className="mt-6 grid gap-4 lg:grid-cols-2">
+                <div className="min-w-0!">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-(--text-subtle)">
+                    Cursor / VS Code — .cursor/mcp.json
+                  </div>
+                  <pre className="min-w-0! overflow-x-auto rounded-[1.2rem] bg-[#111111] px-4 py-4 text-sm leading-7 text-white">
+                    <code className="block whitespace-pre-wrap">{connectConfig}</code>
+                  </pre>
+                  <div className="mt-3 flex items-center justify-end">
+                    <button
+                      type="button"
+                      onClick={() => copyText('connect', connectConfig)}
+                      className={copyButtonClass}
+                    >
+                      {copiedKey === 'connect' ? 'Copied' : 'Copy config'}
+                    </button>
+                  </div>
+                </div>
+                <div className="min-w-0!">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-(--text-subtle)">
+                    Claude Code — terminal
+                  </div>
+                  <pre className="min-w-0! overflow-x-auto rounded-[1.2rem] bg-[#111111] px-4 py-4 text-sm leading-7 text-white">
+                    <code className="block whitespace-pre-wrap">{claudeConnectCommand}</code>
+                  </pre>
+                  <div className="mt-3 flex items-center justify-end">
+                    <button
+                      type="button"
+                      onClick={() => copyText('claude', claudeConnectCommand)}
+                      className={copyButtonClass}
+                    >
+                      {copiedKey === 'claude' ? 'Copied' : 'Copy command'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p className="mt-4 text-sm leading-6 text-(--text-muted)">
+                Both snippets use the default port — if Settings shows a different one, use that
+                URL instead. More clients (MCPJam, Windsurf, Antigravity):{' '}
+                <a
+                  href={mcpGuideHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={textLinkClass}
+                >
+                  the MCP guide
+                </a>
+                .
+              </p>
+            </article>
           </div>
         </div>
       </section>
