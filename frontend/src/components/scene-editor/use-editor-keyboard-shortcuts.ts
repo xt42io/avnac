@@ -204,7 +204,7 @@ export function useEditorKeyboardShortcuts({
         reorderSelectionLayers(e.shiftKey ? 'back' : 'backward')
         return
       }
-      if (!mod && !e.altKey && !e.shiftKey) {
+      if (!mod && !e.altKey && !e.shiftKey && !e.repeat) {
         const shortcut = sceneCreationShortcutForKey(e.key)
         if (shortcut) {
           e.preventDefault()

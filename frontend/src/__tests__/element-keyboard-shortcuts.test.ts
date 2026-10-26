@@ -25,6 +25,39 @@ describe('sceneCreationShortcutForKey', () => {
   })
 })
 
+function renderElementShortcutHook(scope: HTMLElement) {
+  const addText = vi.fn()
+  const addShapeFromKind = vi.fn()
+
+  const { unmount } = renderHook(() =>
+    useEditorKeyboardShortcuts({
+      addShapeFromKind,
+      addText,
+      applyingHistoryRef: { current: false },
+      commitTextDraft: vi.fn(),
+      copyElementToClipboard: vi.fn(),
+      deleteSelection: vi.fn(),
+      duplicateElement: vi.fn(),
+      groupSelection: vi.fn(),
+      historyIndexRef: { current: 0 },
+      historyRef: { current: [] },
+      nudgeSelection: vi.fn(),
+      onZoomFitRequest: vi.fn(),
+      onZoomInRequest: vi.fn(),
+      onZoomOutRequest: vi.fn(),
+      pasteFromClipboard: vi.fn(),
+      reorderSelectionLayers: vi.fn(),
+      setDoc: vi.fn(),
+      setShortcutsOpen: vi.fn(),
+      shortcutScopeRef: { current: scope },
+      ungroupSelection: vi.fn(),
+    }),
+  )
+
+  scope.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+  return { addShapeFromKind, addText, unmount }
+}
+
 describe('useEditorKeyboardShortcuts element shortcuts', () => {
   afterEach(() => {
     document.body.innerHTML = ''
@@ -33,35 +66,8 @@ describe('useEditorKeyboardShortcuts element shortcuts', () => {
   it('adds elements from unmodified keys inside the editor scope', () => {
     const scope = document.createElement('div')
     document.body.appendChild(scope)
-    const addText = vi.fn()
-    const addShapeFromKind = vi.fn()
+    const { addShapeFromKind, addText, unmount } = renderElementShortcutHook(scope)
 
-    const { unmount } = renderHook(() =>
-      useEditorKeyboardShortcuts({
-        addShapeFromKind,
-        addText,
-        applyingHistoryRef: { current: false },
-        commitTextDraft: vi.fn(),
-        copyElementToClipboard: vi.fn(),
-        deleteSelection: vi.fn(),
-        duplicateElement: vi.fn(),
-        groupSelection: vi.fn(),
-        historyIndexRef: { current: 0 },
-        historyRef: { current: [] },
-        nudgeSelection: vi.fn(),
-        onZoomFitRequest: vi.fn(),
-        onZoomInRequest: vi.fn(),
-        onZoomOutRequest: vi.fn(),
-        pasteFromClipboard: vi.fn(),
-        reorderSelectionLayers: vi.fn(),
-        setDoc: vi.fn(),
-        setShortcutsOpen: vi.fn(),
-        shortcutScopeRef: { current: scope },
-        ungroupSelection: vi.fn(),
-      }),
-    )
-
-    scope.dispatchEvent(new Event('pointerdown', { bubbles: true }))
     scope.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 't' }))
     scope.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'r' }))
 
@@ -73,38 +79,24 @@ describe('useEditorKeyboardShortcuts element shortcuts', () => {
   it('does not add elements when a modifier key is held', () => {
     const scope = document.createElement('div')
     document.body.appendChild(scope)
-    const addText = vi.fn()
-    const addShapeFromKind = vi.fn()
+    const { addShapeFromKind, addText, unmount } = renderElementShortcutHook(scope)
 
-    const { unmount } = renderHook(() =>
-      useEditorKeyboardShortcuts({
-        addShapeFromKind,
-        addText,
-        applyingHistoryRef: { current: false },
-        commitTextDraft: vi.fn(),
-        copyElementToClipboard: vi.fn(),
-        deleteSelection: vi.fn(),
-        duplicateElement: vi.fn(),
-        groupSelection: vi.fn(),
-        historyIndexRef: { current: 0 },
-        historyRef: { current: [] },
-        nudgeSelection: vi.fn(),
-        onZoomFitRequest: vi.fn(),
-        onZoomInRequest: vi.fn(),
-        onZoomOutRequest: vi.fn(),
-        pasteFromClipboard: vi.fn(),
-        reorderSelectionLayers: vi.fn(),
-        setDoc: vi.fn(),
-        setShortcutsOpen: vi.fn(),
-        shortcutScopeRef: { current: scope },
-        ungroupSelection: vi.fn(),
-      }),
-    )
-
-    scope.dispatchEvent(new Event('pointerdown', { bubbles: true }))
     scope.dispatchEvent(
       new KeyboardEvent('keydown', { bubbles: true, ctrlKey: true, key: 't' }),
     )
+
+    expect(addText).not.toHaveBeenCalled()
+    expect(addShapeFromKind).not.toHaveBeenCalled()
+    unmount()
+  })
+
+  it('does not add elements for repeated keydown events', () => {
+    const scope = document.createElement('div')
+    document.body.appendChild(scope)
+    const { addShapeFromKind, addText, unmount } = renderElementShortcutHook(scope)
+
+    scope.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 't', repeat: true }))
+    scope.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'r', repeat: true }))
 
     expect(addText).not.toHaveBeenCalled()
     expect(addShapeFromKind).not.toHaveBeenCalled()
