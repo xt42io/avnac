@@ -73,7 +73,7 @@ export function EditorBottomTools({
                 addShapeFromKind(shapesQuickAddKind === 'generic' ? 'rect' : shapesQuickAddKind)
               }
               aria-label="Add shape"
-              title="Add shape"
+              title="Add shape (R / O / P / S / L / A)"
               iconBefore={
                 <HugeiconsIcon
                   icon={iconForShapesQuickAdd(shapesQuickAddKind)}
@@ -107,6 +107,7 @@ export function EditorBottomTools({
           <IconButton
             icon={TextFontIcon}
             label="Add text"
+            title="Add text (T)"
             disabled={!ready}
             size="md"
             className="rounded-lg"

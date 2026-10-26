@@ -2501,6 +2501,8 @@ const SceneEditor = forwardRef<SceneEditorHandle, SceneEditorProps>(function Sce
   }, [pendingPageScrollId])
 
   useEditorKeyboardShortcuts({
+    addShapeFromKind,
+    addText,
     applyingHistoryRef,
     commitTextDraft,
     copyElementToClipboard,
