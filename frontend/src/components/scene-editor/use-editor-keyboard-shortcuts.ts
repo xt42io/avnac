@@ -9,10 +9,33 @@ import {
 
 import { type AvnacDocument, cloneAvnacDocument } from '../../lib/avnac-scene'
 import type { LayerReorderKind } from '../../scene-engine/primitives'
+import type { PopoverShapeKind } from '../shapes-popover'
 
 type AsyncCommand = () => void | Promise<void>
 
+export type SceneCreationShortcut =
+  | { type: 'text' }
+  | { type: 'shape'; kind: PopoverShapeKind }
+
+const SHAPE_SHORTCUTS: Record<string, PopoverShapeKind> = {
+  a: 'arrow',
+  l: 'line',
+  o: 'ellipse',
+  p: 'polygon',
+  r: 'rect',
+  s: 'star',
+}
+
+export function sceneCreationShortcutForKey(key: string): SceneCreationShortcut | null {
+  const normalizedKey = key.toLowerCase()
+  if (normalizedKey === 't') return { type: 'text' }
+  const kind = SHAPE_SHORTCUTS[normalizedKey]
+  return kind ? { type: 'shape', kind } : null
+}
+
 type UseEditorKeyboardShortcutsArgs = {
+  addShapeFromKind: (kind: PopoverShapeKind) => void
+  addText: () => void
   applyingHistoryRef: MutableRefObject<boolean>
   commitTextDraft: () => void
   copyElementToClipboard: AsyncCommand
@@ -56,6 +79,8 @@ function hasNativeTextSelection(): boolean {
 }
 
 export function useEditorKeyboardShortcuts({
+  addShapeFromKind,
+  addText,
   applyingHistoryRef,
   commitTextDraft,
   copyElementToClipboard,
@@ -179,6 +204,15 @@ export function useEditorKeyboardShortcuts({
         reorderSelectionLayers(e.shiftKey ? 'back' : 'backward')
         return
       }
+      if (!mod && !e.altKey && !e.shiftKey && !e.repeat) {
+        const shortcut = sceneCreationShortcutForKey(e.key)
+        if (shortcut) {
+          e.preventDefault()
+          if (shortcut.type === 'text') addText()
+          else addShapeFromKind(shortcut.kind)
+          return
+        }
+      }
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault()
         deleteSelection()
@@ -212,6 +246,8 @@ export function useEditorKeyboardShortcuts({
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
   }, [
+    addShapeFromKind,
+    addText,
     applyingHistoryRef,
     commitTextDraft,
     copyElementToClipboard,

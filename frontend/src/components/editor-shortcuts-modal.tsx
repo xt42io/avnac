@@ -14,6 +14,11 @@ const ROWS: ShortcutRow[] = [
   { keys: 'Shift + Arrow keys', action: 'Nudge selection 10px' },
   { keys: 'Delete / Backspace', action: 'Delete selection' },
   { keys: 'Option/Alt + drag', action: 'Duplicate while dragging (canvas)' },
+  { keys: 'T', action: 'Add text' },
+  {
+    keys: 'R / O / P / S / L / A',
+    action: 'Add rectangle / ellipse / polygon / star / line / arrow',
+  },
   {
     keys: 'Vector board — tools',
     action: 'V = Move, P = Pen, Shift+P = Pencil, R = Rectangle, O = Ellipse',
